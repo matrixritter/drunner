@@ -29,12 +29,6 @@ our %EXPORT_TAGS = (
 my $virtualbox 	= "VBoxManage";
 my $vm_name 	= "default";
 
-# use Eixo::Docker::Api;
-# use forks;
-# my $docker_http_host = $ENV{DOCKER_HOST};
-# $docker_http_host =~ s/tcp/http/;
-# my $docker_host = Eixo::Docker::Api->new($docker_http_host);
-# my $container = $docker_host->containers->get( id => "b6055cacbc06" );
 
 # =pod
 
@@ -106,18 +100,8 @@ The sub doesn't check if the handler is the right one
 
 sub _get_docker_forwardings{
 	my $docker = $_[0];
-	# print Dumper($docker);
-	# print Dumper($docker->{Config}{ExposedPorts});
 	my @return_values;
-	#print ref($docker) . "\n";
-	#print Dumper($docker);
-	#my $forwards = $docker->{NetworkSettings}{Ports};
-	#print Dumper($docker->{NetworkSettings}{Ports});
-	# print Dumper($_[1]);
-	# my $docker = \$_[0];
 	foreach (keys $docker->{Config}{ExposedPorts}) {
-        	# my $index = index $_, '/';
-        	# my $key = substr $_, 0, $index;
         	my ($container_port, $protocol) = split '/', $_;
         	# print $container_port . "\n";
         	push @return_values, {
@@ -319,26 +303,5 @@ sub remove_forwardings {
         	}
 	}
 }
-
-		
-
-		
-
-# print_forwarded_ports();
-
-# _check_forwardings($container);
-
-# forward_ports();
-	
-
-# my $output = _get_forwardings();
-# print Dumper($output);
-
-# my $docker_forwardings = _get_docker_forwardings();
-# print Dumper($docker_forwardings);
-# my $virtualbox_forwardings = _get_virtualbox_forwardings();
-# print Dumper($virtualbox_forwardings);
-
-
 
 1;

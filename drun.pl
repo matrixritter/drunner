@@ -14,12 +14,6 @@ use Cwd;
 use Git;
 use Term::ANSIColor;
 
-# This should be unneeded in this file
-#use Config::Tiny;
-#use Eixo::Docker::Api;
-#use File::Find::Rule;
-
-
 # Own functions
 use lib 'lib';
 use dRunner::Prereq qw(:export);
@@ -332,7 +326,3 @@ given ($action) {
 	}
 		
 }
-
-# Cleanup
-
-# $cfg->write("$absolut_ini[0]");
