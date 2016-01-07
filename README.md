@@ -24,6 +24,7 @@ perlbrew use perl-5.22.1
 cpanm Git
 cpanm Config::Tiny
 cpanm forks
+cpanm File::Find::Rule
 cpanm --force LWP::Protocol::https
 cpanm Eixo::Docker
 git clone https://github.com/matrixritter/drunner.git
