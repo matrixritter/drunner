@@ -4,7 +4,7 @@
 use warnings;
 use strict;
 # use diagnostics;
-# use v5.12;
+use v5.12;
 use experimental 'autoderef', 'smartmatch','switch'; 
 use Data::Dumper;
 use autodie;
@@ -33,9 +33,8 @@ use constant {
 }; 
 
 # A little introduction
-print "This is $own_name!\n";
-print "Version $version" . "\n";
-print "\n";
+say "This is $own_name!";
+say "Version $version\n";
 
 =pod
 
@@ -66,7 +65,7 @@ sub get_status() {
 		print "All prerequisites fullfilled: " . colored("OK", 'green') . "\n";
 	}
 	else {
-		print "Broken handlers: " . colored("CRITICAL", 'red');
+		print "Broken handlers: " . colored("CRITICAL", 'red') . "\n";
 	}
 	
 	my $status = get_container_status( $handlers->{docker}, $handlers->{config} ); 
@@ -74,12 +73,11 @@ sub get_status() {
 		print "Docker Container is running: " . colored("OK", 'green') . "\n";
 	}
 	else {
-		print colored("Docker Container is not running", 'red') . " - You can start it with the subcommand " . colored("run\n", 'magenta');
+		print colored("Docker Container is not running", 'red') . " - You can start it with the subcommand " . colored("start\n", 'magenta');
 	}
 }
 
 sub pull_repo() {
-
 	# my $pull 	= $repo->command('pull');
 }
 
@@ -124,10 +122,7 @@ None known
 =cut
 
 sub run_docker{
-	# require forks;
 	my ( $docker, $config, $rootdir ) = ( $handlers->{docker}, $handlers->{config}, $handlers->{rootdir} );
-	# print Dumper($docker);
-	# print Dumper($config);
 	my $image = "$config->{_}->{repository}" . ":" . "$config->{_}->{tag}";
 
 	# Take all service-blocks
@@ -147,15 +142,11 @@ sub run_docker{
 	my @array;
 	foreach ( values @mounts ) {
 		my $dir = $_;
-		# print $dir . "\n";
-		# print Dumper($config->{$dir});
 		my $fulldir = $rootdir . "/" . $config->{$dir}{host_directory} . ":" . $config->{$dir}{container_mount};
 		push @array, $fulldir;
 		print "Will try to mount " . $rootdir . "/" . $config->{$dir}{host_directory} . " to " . $config->{$dir}{container_mount} . " in the container\n";
 		$config->{$dir}{mounted}="true";
 	}
-	# print Dumper(@array); 	
-	# print Dumper(%hash);
 	my $port_ref = \%hash;
 	my $mount_ref = \@array;	
 	my $container = $docker->containers->create(
@@ -168,12 +159,10 @@ sub run_docker{
 		},
 		# Entrypoint => "/bin/bash",
 	);
-	#print Dumper($container);
-	# print Dumper($docroot);
+
 	$container->start(
 			"PublishAllPorts"	=> JSON::PP->true,
 	);
-
 	
 	# Save variables
 	# print Dumper($rootdir);
@@ -189,14 +178,7 @@ sub run_docker{
 	# Workaround:
 	my $container_id = $config->{_}->{container_id};
 	my $started_container = $docker->containers->get(id => $container_id );
-	#print Dumper($started_container);
 	forward_ports($started_container,$config);
-
-	# We need our files in the container
-
-	#print Dumper($container);
-	#my $forwards = _get_docker_forwardings($started_container);
-	#print Dumper($forwards);
 }
 	
 =pod
@@ -307,7 +289,7 @@ given ($action) {
 	when ('commit') {
 		commit_repo();
 	}
-	when ('run') {
+	when ('start') {
 		run_docker();
 	}
 	when ('stop') {
@@ -318,11 +300,5 @@ given ($action) {
 	}
 	when ('dump') {
 		dump_databases();
-	}
-	when ('test') {
-		my $command = "mysqldump --all-databases | gzip -c -";
-		my $outputfile = "/Users/kkruse/dump.sql.gz";
-		exec_and_save_container_command( $handlers->{docker}, $handlers->{config}, $command, $outputfile );
-	}
-		
+	}	
 }
