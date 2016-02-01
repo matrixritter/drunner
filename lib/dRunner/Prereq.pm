@@ -15,6 +15,7 @@ use Config::Tiny;
 use forks;
 use Eixo::Docker::Api;
 use File::Find::Rule;
+use Parse::Netstat qw(parse_netstat);
 
 use Exporter 'import';
 our @EXPORT_OK = qw(
@@ -48,16 +49,47 @@ use constant {
 ###
 
 # Get the connection details from our docker host or die
+
+=pod 
+
+=head1 DESCRIPTION
+
+This sub tries to get the right variables for connecting to a local docker daemon
+
+=head1 FUNCTION
+
+This sub gives back an instance of Eixo::Docker::Api
+
+=head 1 METHODS
+
+get_status()
+
+=head1 BUGS
+
+None known
+
+=cut
+
 sub _get_docker_host{
-	if ( not defined $ENV{DOCKER_HOST} ) { die "No Docker Host! Die...\n"; }
-    my $docker_host = Eixo::Docker::Api->new(
+    my $docker_host;
+	if ( defined $ENV{DOCKER_HOST} ) {
+        $docker_host = Eixo::Docker::Api->new(
 		host 		=> "$ENV{DOCKER_HOST}",
 		tls_verify 	=> "$ENV{DOCKER_TLS_VERIFY}",
 		ca_file 	=> "$ENV{DOCKER_CERT_PATH}/ca.pem",
 		cert_file	=> "$ENV{DOCKER_CERT_PATH}/cert.pem",
 		key_file 	=> "$ENV{DOCKER_CERT_PATH}/key.pem",
-		# tls_verify 	=> 1,
-	);
+	); } else {
+        print "Sadly not a docker-machine-like environment here...\n";
+        my $res = parse_netstat(output=>join("", `netstat -tlnp 2> /dev/null`), flavor=>"linux", unix=>0, udp=>0);
+        my $docker_port;
+        foreach my $value ( @{$res->[2]{active_conns}} ) {
+            if ( $value->{local_port} =~ /2375/ ) {
+                $docker_port = $value->{local_port};
+            };
+        };
+        defined $docker_port ? $docker_host = Eixo::Docker::Api->new('http://127.0.0.1:2375') : die "Docker port not found\n";
+    };
 
 	my %return_values = (
 		"docker_handler" , $docker_host
