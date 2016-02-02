@@ -150,22 +150,18 @@ sub run_docker{
 	my $port_ref = \%hash;
 	my $mount_ref = \@array;	
 	my $container = $docker->containers->create(
-		Image 		=> $image,
-		NetworkDisabled => JSON::PP->false,
-		ExposedPorts 	=> $port_ref,
-		HostConfig 	=> {
-				Binds => $mount_ref,
-				
-		},
+		Image             => $image,
+		NetworkDisabled   => JSON::PP->false,
+		ExposedPorts      => $port_ref,
+		HostConfig        => { Binds => $mount_ref },
 		# Entrypoint => "/bin/bash",
 	);
 
 	$container->start(
-			"PublishAllPorts"	=> JSON::PP->true,
+		"PublishAllPorts"	=> JSON::PP->true,
 	);
 	
 	# Save variables
-	# print Dumper($rootdir);
 	$config->{_}->{container_name} = $container->{Name};
 	$config->{_}->{container_status} = "running";
 	$config->{_}->{container_id} = $container->{Id};
@@ -173,12 +169,14 @@ sub run_docker{
 
 	print "Started container\n";
 
-	# Make it work!
-	# Problem: $container doesn't really carries what we need(?)
-	# Workaround:
-	my $container_id = $config->{_}->{container_id};
-	my $started_container = $docker->containers->get(id => $container_id );
-	forward_ports($started_container,$config);
+	# Make it work in Virtualbox
+    unless ( $^O eq "linux" ) {
+	   # Problem: $container doesn't really carries what we need(?)
+	   # Workaround:
+	   my $container_id = $config->{_}->{container_id};
+	   my $started_container = $docker->containers->get(id => $container_id );
+	   forward_ports($started_container,$config);
+    }
 }
 	
 =pod
