@@ -205,22 +205,34 @@ None known
 
 sub stop_docker{
 	my ( $docker, $config, $rootdir ) = ( $handlers->{docker}, $handlers->{config}, $handlers->{rootdir} );
-
-		my $container;
-		# print Dumper($config);
-		if (defined $config->{_}->{container_id} && $config->{_}->{container_id} =~ /[[:alpha:]]+/ ) {
-			# print "container_id is defined" . "\n";
-			$container = $docker->containers->get( id => "$config->{_}->{container_id}" );
-		}
-		elsif (defined $config->{_}->{container_name} && $config->{_}->{container_name} =~ /[[:alpha:]]+/ ) {
-			# print "container_name is defined" . "\n";
-			$container = $docker->containers->getByName( $config->{_}->{container_name} );
+    my $container;
+	# print Dumper($config);
+	
+    sub cleanup_config {
+	   delete $config->{_}->{container_name};
+	   delete $config->{_}->{container_status};
+	   delete $config->{_}->{container_id};
+	   $config->write( ${rootdir} . '/' . CONFIGURATION_FILENAME );        
+    };
+    
+    if (defined $config->{_}->{container_id} && $config->{_}->{container_id} =~ /[[:alpha:]]+/ ) {
+		print "container_id is defined" . "\n";
+		$container = $docker->containers->get( id => "$config->{_}->{container_id}" );
+	}
+	elsif (defined $config->{_}->{container_name} && $config->{_}->{container_name} =~ /[[:alpha:]]+/ ) {
+		print "container_name is defined" . "\n";
+		$container = $docker->containers->getByName( $config->{_}->{container_name} );
 	}
 	else {
 		die "No running container" . "\n";
 	}
 
-	# print Dumper($container);
+    my $container_status = $container->status();
+
+    # my $json_false = JSON::PP::
+	if ( $container_status->{Running} == JSON::PP::false) {
+        say "Your container is not running";   
+    }
 	print "Stopping Container" . "\n";
 	$container->stop();
 	print colored("Container stopped\n", 'green');
@@ -228,10 +240,7 @@ sub stop_docker{
 	print "Remove forwardings" . "\n";
 	remove_forwardings($config);
 	
-	delete $config->{_}->{container_name};
-	delete $config->{_}->{container_status};
-	delete $config->{_}->{container_id};
-	$config->write( ${rootdir} . '/' . CONFIGURATION_FILENAME );
+
 	
 }
 
